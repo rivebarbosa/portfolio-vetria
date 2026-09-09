@@ -20,6 +20,9 @@
 
 - **RNF-13 — Proteção de dados pessoais em ambientes não produtivos**: dados pessoais de clientes, revendedores ou colaboradores não podem existir em sua forma real em Dev/Hml — devem ser mascarados, anonimizados ou substituídos por dados sintéticos antes de qualquer cópia a partir de produção.
 
+- **RNF-14 — Conformidade validada automaticamente**: qualquer recurso fora dos padrões definidos nas ADRs (região, redundância, exposição pública) deve ser bloqueado na criação, não apenas identificado depois.
+- **RNF-15 — Segredos centralizados e nunca em texto plano**: toda credencial, chave ou certificado deve residir em um cofre de segredos, nunca em pipeline, repositório ou configuração de aplicação.
+
 ## Requisitos funcionais (relevantes para este bloco)
 
 - **RF-01**: cada aplicação deve ter pipeline de CI/CD próprio, a partir de um template reutilizável.
@@ -29,6 +32,8 @@
 - **RF-04**: toda aplicação (Container Apps ou App Service) deve emitir logs estruturados (JSON), instrumentados via OpenTelemetry, com trace/span IDs para correlação entre requisições.
 
 - **RF-05**: toda aplicação que acessa outros serviços Azure (Key Vault, Storage, Azure Container Registry, bancos de dados) deve usar Managed Identity, nunca connection string ou API key em configuração.
+
+- **RF-06**: todo pipeline de infraestrutura deve validar conformidade de política antes do deploy, com bloqueio automático em caso de não conformidade.
 
 ## Fora de escopo (por ora)
 
