@@ -16,6 +16,8 @@
 - **RF-02**: o processo de build deve gerar artefatos containerizados armazenados em um registry privado (Azure Container Registry).
 - **RF-03**: a promoção entre ambientes (dev → hml → prod) deve ocorrer via pipeline, com aprovação manual antes de produção.
 
+- **RF-04**: toda aplicação (Container Apps ou App Service) deve emitir logs estruturados (JSON), instrumentados via OpenTelemetry, com trace/span IDs para correlação entre requisições.
+
 ## Fora de escopo (por ora)
 
 - Comunicação síncrona/assíncrona entre aplicações (não há esse requisito hoje).
