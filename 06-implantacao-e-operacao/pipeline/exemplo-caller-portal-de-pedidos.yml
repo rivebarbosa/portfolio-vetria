@@ -1,0 +1,55 @@
+# Exemplo ilustrativo: como o repositorio da aplicacao "portal-de-pedidos"
+# (fora deste repositorio de arquitetura) invocaria o reusable workflow acima,
+# promovendo dev -> hml -> prod. O ambiente "prod" tem uma protection rule
+# configurada no GitHub exigindo aprovacao manual antes de rodar (RF-03).
+
+name: Deploy - Portal de Pedidos
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dev:
+    uses: vetria-distribuicao/portfolio-vetria/.github/workflows/reusable-deploy.yml@main
+    with:
+      app_name: portal-de-pedidos
+      resource_group: rg-vetria-dev
+      acr_name: acrvetriadev
+      container_app_name: ca-portal-pedidos-dev
+      environment: dev
+      bicep_path: infra/main.bicep
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_DEV }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_DEV }}
+
+  hml:
+    needs: dev
+    uses: vetria-distribuicao/portfolio-vetria/.github/workflows/reusable-deploy.yml@main
+    with:
+      app_name: portal-de-pedidos
+      resource_group: rg-vetria-hml
+      acr_name: acrvetriahml
+      container_app_name: ca-portal-pedidos-hml
+      environment: hml
+      bicep_path: infra/main.bicep
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_HML }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_HML }}
+
+  prod:
+    needs: hml
+    uses: vetria-distribuicao/portfolio-vetria/.github/workflows/reusable-deploy.yml@main
+    with:
+      app_name: portal-de-pedidos
+      resource_group: rg-vetria-prod
+      acr_name: acrvetriaprod
+      container_app_name: ca-portal-pedidos-prod
+      environment: prod
+      bicep_path: infra/main.bicep
+    secrets:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_PROD }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_PROD }}
