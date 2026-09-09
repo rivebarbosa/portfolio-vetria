@@ -13,6 +13,8 @@
 - **RNF-08 — Isolamento de rede entre ambientes**: produção deve ser isolada de dev/homologação, com blast radius e billing separados.
 - **RNF-09 — Sem exposição pública de serviços de plataforma**: Azure Container Registry, Key Vault, Log Analytics e bancos de dados não devem ter endpoint público, acessíveis somente via Private Link.
 
+- **RNF-10 — Residência de dados no Brasil**: todos os dados da Vetria (aplicacionais, telemetria e backups) devem permanecer fisicamente em território brasileiro; nenhum recurso pode replicar dados para outra geografia, mesmo para fins de disaster recovery.
+
 ## Requisitos funcionais (relevantes para este bloco)
 
 - **RF-01**: cada aplicação deve ter pipeline de CI/CD próprio, a partir de um template reutilizável.
