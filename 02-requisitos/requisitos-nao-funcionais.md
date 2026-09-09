@@ -23,6 +23,8 @@
 - **RNF-14 — Conformidade validada automaticamente**: qualquer recurso fora dos padrões definidos nas ADRs (região, redundância, exposição pública) deve ser bloqueado na criação, não apenas identificado depois.
 - **RNF-15 — Segredos centralizados e nunca em texto plano**: toda credencial, chave ou certificado deve residir em um cofre de segredos, nunca em pipeline, repositório ou configuração de aplicação.
 
+- **RNF-16 — Unicidade de ferramenta de CI/CD**: todas as aplicações do portfólio devem usar o mesmo ecossistema de CI/CD, evitando a fragmentação hoje existente (cada squad monta o pipeline à sua maneira, identificada no discovery).
+
 ## Requisitos funcionais (relevantes para este bloco)
 
 - **RF-01**: cada aplicação deve ter pipeline de CI/CD próprio, a partir de um template reutilizável.
