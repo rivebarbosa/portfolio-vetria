@@ -15,6 +15,9 @@
 
 - **RNF-10 — Residência de dados no Brasil**: todos os dados da Vetria (aplicacionais, telemetria e backups) devem permanecer fisicamente em território brasileiro; nenhum recurso pode replicar dados para outra geografia, mesmo para fins de disaster recovery.
 
+- **RNF-11 — Sem credenciais de longa duração**: pipelines e aplicações devem se autenticar via identidade federada (OIDC) ou managed identity, nunca via client secret, connection string ou chave de acesso fixa.
+- **RNF-12 — Acesso privilegiado just-in-time**: acesso a subscriptions de produção deve ser temporário, elevado sob demanda e auditável (PIM), nunca atribuição permanente de Owner/Contributor.
+
 ## Requisitos funcionais (relevantes para este bloco)
 
 - **RF-01**: cada aplicação deve ter pipeline de CI/CD próprio, a partir de um template reutilizável.
@@ -22,6 +25,8 @@
 - **RF-03**: a promoção entre ambientes (dev → hml → prod) deve ocorrer via pipeline, com aprovação manual antes de produção.
 
 - **RF-04**: toda aplicação (Container Apps ou App Service) deve emitir logs estruturados (JSON), instrumentados via OpenTelemetry, com trace/span IDs para correlação entre requisições.
+
+- **RF-05**: toda aplicação que acessa outros serviços Azure (Key Vault, Storage, Azure Container Registry, bancos de dados) deve usar Managed Identity, nunca connection string ou API key em configuração.
 
 ## Fora de escopo (por ora)
 
