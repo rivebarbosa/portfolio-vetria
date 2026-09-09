@@ -10,6 +10,9 @@
 - **RNF-06 — Observabilidade centralizada**: mesmo com aplicações isoladas, deve existir visão consolidada de logs, métricas e falhas.
 - **RNF-07 — Evolutividade**: a arquitetura deve comportar, no futuro, aplicações que eventualmente precisem se comunicar entre si (ex.: pub/sub entre WMS e TMS), sem exigir uma re-arquitetura completa.
 
+- **RNF-08 — Isolamento de rede entre ambientes**: produção deve ser isolada de dev/homologação, com blast radius e billing separados.
+- **RNF-09 — Sem exposição pública de serviços de plataforma**: Azure Container Registry, Key Vault, Log Analytics e bancos de dados não devem ter endpoint público, acessíveis somente via Private Link.
+
 ## Requisitos funcionais (relevantes para este bloco)
 
 - **RF-01**: cada aplicação deve ter pipeline de CI/CD próprio, a partir de um template reutilizável.
