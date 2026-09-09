@@ -18,6 +18,8 @@
 - **RNF-11 — Sem credenciais de longa duração**: pipelines e aplicações devem se autenticar via identidade federada (OIDC) ou managed identity, nunca via client secret, connection string ou chave de acesso fixa.
 - **RNF-12 — Acesso privilegiado just-in-time**: acesso a subscriptions de produção deve ser temporário, elevado sob demanda e auditável (PIM), nunca atribuição permanente de Owner/Contributor.
 
+- **RNF-13 — Proteção de dados pessoais em ambientes não produtivos**: dados pessoais de clientes, revendedores ou colaboradores não podem existir em sua forma real em Dev/Hml — devem ser mascarados, anonimizados ou substituídos por dados sintéticos antes de qualquer cópia a partir de produção.
+
 ## Requisitos funcionais (relevantes para este bloco)
 
 - **RF-01**: cada aplicação deve ter pipeline de CI/CD próprio, a partir de um template reutilizável.
