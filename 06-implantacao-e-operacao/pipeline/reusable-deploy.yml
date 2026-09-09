@@ -1,0 +1,135 @@
+name: Vetria - Pipeline reutilizavel de deploy
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: "Nome da aplicacao (ex.: portal-de-pedidos)"
+        required: true
+        type: string
+      resource_group:
+        description: "Resource group Azure do ambiente alvo"
+        required: true
+        type: string
+      acr_name:
+        description: "Nome do Azure Container Registry"
+        required: true
+        type: string
+      container_app_name:
+        description: "Nome do Container App"
+        required: true
+        type: string
+      environment:
+        description: "Ambiente alvo: dev, hml ou prod"
+        required: true
+        type: string
+      bicep_path:
+        description: "Caminho do template Bicep de infraestrutura da aplicacao"
+        required: false
+        type: string
+        default: "infra/main.bicep"
+    secrets:
+      AZURE_CLIENT_ID:
+        required: true
+      AZURE_TENANT_ID:
+        required: true
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+
+permissions:
+  id-token: write   # necessario para OIDC / Workload Identity Federation (ADR-0005)
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no Azure via OIDC (sem client secret - ADR-0005)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Definir tag da imagem
+        id: vars
+        run: echo "image_tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Login no Azure Container Registry
+        run: az acr login --name ${{ inputs.acr_name }}
+
+      - name: Build e push da imagem
+        run: |
+          docker build -t ${{ inputs.acr_name }}.azurecr.io/${{ inputs.app_name }}:${{ steps.vars.outputs.image_tag }} .
+          docker push ${{ inputs.acr_name }}.azurecr.io/${{ inputs.app_name }}:${{ steps.vars.outputs.image_tag }}
+
+  validar-infraestrutura:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no Azure via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # RF-06 / ADR-0007: o "what-if" falha automaticamente se o template
+      # violar uma politica com efeito deny atribuida no management group
+      # (regiao, redundancia, exposicao publica). O gate de politica nao e
+      # um passo a parte: e a propria validacao do Azure Resource Manager.
+      - name: Validar conformidade de politica (what-if)
+        run: |
+          az deployment group what-if \
+            --resource-group ${{ inputs.resource_group }} \
+            --template-file ${{ inputs.bicep_path }} \
+            --parameters appName=${{ inputs.app_name }} imageTag=${{ needs.build-and-push.outputs.image_tag }}
+
+  deploy-infraestrutura:
+    needs: validar-infraestrutura
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no Azure via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy do Bicep (App Insights, Key Vault, Container App, banco - ADR-0002/0006/0007)
+        run: |
+          az deployment group create \
+            --resource-group ${{ inputs.resource_group }} \
+            --template-file ${{ inputs.bicep_path }} \
+            --parameters appName=${{ inputs.app_name }} imageTag=${{ needs.build-and-push.outputs.image_tag }}
+
+  smoke-test:
+    needs: deploy-infraestrutura
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Login no Azure via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verificar saude da aplicacao
+        run: |
+          FQDN=$(az containerapp show \
+            --name ${{ inputs.container_app_name }} \
+            --resource-group ${{ inputs.resource_group }} \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          curl --fail --retry 5 --retry-delay 10 "https://$FQDN/health"
