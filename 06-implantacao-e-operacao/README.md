@@ -7,6 +7,8 @@ Detalha, em código, o pipeline de CI/CD decidido na ADR-0008 e como ele materia
 - `pipeline/reusable-deploy.yml` — o reusable workflow central (RF-01), chamado por todo repositório de aplicação.
 - `pipeline/exemplo-caller-portal-de-pedidos.yml` — exemplo de como um repositório de aplicação invoca o template, promovendo dev → hml → prod.
 
+Representação visual do fluxo abaixo: [`04-diagramas/pipeline-cicd.png`](../04-diagramas/pipeline-cicd.png) (fonte editável em [`04-diagramas/pipeline-cicd.drawio`](../04-diagramas/pipeline-cicd.drawio)).
+
 ## Como os estágios do pipeline materializam as ADRs anteriores
 
 1. **build-and-push**: login no Azure via OIDC/federated credentials, sem client secret (ADR-0005) — constrói a imagem e publica no Azure Container Registry.

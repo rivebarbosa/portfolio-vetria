@@ -1,6 +1,6 @@
 # Diagramas
 
-Diagramas C4 (Contexto e Container/Landing Zone) consolidando as decisões das ADR-0001 a ADR-0008. Cada diagrama existe em duas formas:
+Diagramas C4 (Contexto e Container/Landing Zone) consolidando as decisões das ADR-0001 a ADR-0008, mais um diagrama de fluxo do pipeline de CI/CD (ADR-0008) no mesmo estilo visual. Cada diagrama existe em duas formas:
 - **`.png`** — imagem renderizada, para visualização direta aqui no GitHub.
 - **`.drawio`** — fonte editável (formato draw.io / mxGraph XML). Abra com [diagrams.net](https://app.diagrams.net) (importar arquivo) ou a extensão draw.io do VS Code para alterar.
 
@@ -21,3 +21,11 @@ Consolida a infraestrutura decidida nas ADRs em um único diagrama:
 - **Externos ao tenant**: Microsoft Entra ID/External ID (ADR-0005), GitHub Actions fazendo deploy via OIDC (ADR-0008), Microsoft Defender for Cloud e Azure Policy bloqueando recursos fora de conformidade (ADR-0007).
 
 Toda a estrutura está contida no boundary "Azure Tenant — Vetria (região Brazil South)", reforçando a ADR-0004.
+
+## `pipeline-cicd.png` / `pipeline-cicd.drawio` — Pipeline de CI/CD
+
+![Pipeline de CI/CD](./pipeline-cicd.png)
+
+Representação visual do que está implementado em `06-implantacao-e-operacao/pipeline/` (ADR-0008), em duas partes:
+- **Reusable Workflow (`reusable-deploy.yml`)**: as quatro etapas em sequência — `build-and-push` (login via OIDC/Entra ID, sem client secret — ADR-0005; build e push da imagem no Azure Container Registry), `validar-infraestrutura` (`az deployment group what-if`, onde o Azure Resource Manager falha automaticamente se o Bicep violar uma política `deny` do Azure Policy — região, redundância ou exposição pública — materializando RF-06/ADR-0007), `deploy-infraestrutura` (aplica o Bicep no Container App, ADR-0001/0002/0006) e `smoke-test` (healthcheck HTTP pós-deploy).
+- **Promoção entre ambientes (`exemplo-caller-portal-de-pedidos.yml`)**: cada ambiente (dev, hml, prod) chama o workflow acima com suas próprias credenciais federadas (nunca compartilhadas — ADR-0005), encadeados via `needs:`. A promoção para prod passa por uma aprovação manual (GitHub Environment protection rule, RF-03) antes de rodar.
